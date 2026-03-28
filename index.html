@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#ff2d00" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="KartIQ" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="icon" type="image/png" href="icon-192.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:ital,wght@0,400;0,600;0,700;0,900;1,400&display=swap" rel="stylesheet" />
+  <title>KartIQ</title>
+  <style>
+    :root {
+      --bg:      #060a0f;
+      --card:    #0b1220;
+      --b1:      #162035;
+      --b2:      #1e3050;
+      --red:     #ff2d00;
+      --cyan:    #00cfff;
+      --green:   #00ff88;
+      --yellow:  #ffc200;
+      --t1:      #ddeeff;
+      --t2:      #5a7a9a;
+      --t3:      #2a4060;
+      --mono:    'Share Tech Mono', monospace;
+      --ui:      'Exo 2', sans-serif;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bot: env(safe-area-inset-bottom, 0px);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: var(--bg); color: var(--t1); font-family: var(--ui); overscroll-behavior: none; }
+    body { display: flex; flex-direction: column; }
+
+    /* ── HEADER ── */
+    #header {
+      flex-shrink: 0;
+      padding: calc(var(--safe-top) + 10px) 14px 10px;
+      background: var(--card);
+      border-bottom: 1px solid var(--b2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 3px solid var(--red);
+    }
+    .logo { font-size: 20px; font-weight: 900; letter-spacing: 3px; }
+    .logo em { color: var(--red); font-style: normal; }
+    .logo-sub { font-size: 9px; color: var(--t2); letter-spacing: 1.5px; margin-top: 2px; }
+    #badge {
+      font-family: var(--mono); font-size: 10px; padding: 4px 10px;
+      border-radius: 3px; letter-spacing: 1px; font-weight: bold; border: 1px solid;
+      transition: all .3s;
+    }
+    .b-live   { color: var(--red);    border-color: var(--red);    background: rgba(255,45,0,.12);  animation: blink 1s ease-in-out infinite; }
+    .b-off    { color: var(--t2);     border-color: var(--b2);     background: transparent; }
+    .b-demo   { color: var(--yellow); border-color: var(--yellow); background: rgba(255,194,0,.08); }
+    .b-load   { color: var(--cyan);   border-color: var(--cyan);   background: rgba(0,207,255,.08); }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+    /* ── SESSION BAR ── */
+    #session-bar {
+      flex-shrink: 0;
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 6px;
+      padding: 8px 10px;
+      background: var(--card);
+      border-bottom: 1px solid var(--b1);
+    }
+    .sinfo { display: flex; flex-direction: column; gap: 2px; }
+    .sl { font-size: 8px; color: var(--t2); letter-spacing: 1.5px; text-transform: uppercase; }
+    .sv { font-family: var(--mono); font-size: 12px; color: var(--cyan); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ── MAIN SCROLL AREA ── */
+    #main {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 10px 10px;
+      padding-bottom: calc(var(--safe-bot) + 80px);
+    }
+
+    /* ── ACTION ROW ── */
+    #action-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .btn {
+      flex: 1;
+      padding: 11px 8px;
+      border-radius: 4px;
+      font-family: var(--ui);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all .2s;
+      border: 1px solid;
+    }
+    .btn-primary { background: rgba(255,45,0,.1); border-color: var(--red); color: var(--red); }
+    .btn-primary:hover { background: rgba(255,45,0,.2); }
+    .btn-secondary { background: transparent; border-color: var(--b2); color: var(--t2); }
+    .btn-secondary:hover { border-color: var(--cyan); color: var(--cyan); }
+    .btn:disabled { opacity:.35; pointer-events:none; }
+    .spin { display:inline-block; animation:spin .7s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    /* ── TABS ── */
+    #tabs {
+      display: flex;
+      border-bottom: 1px solid var(--b1);
+      margin-bottom: 12px;
+    }
+    .tab {
+      flex: 1;
+      padding: 9px 4px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      text-align: center;
+      cursor: pointer;
+      color: var(--t2);
+      border-bottom: 2px solid transparent;
+      transition: all .2s;
+    }
+    .tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+    /* ── SECTION TITLE ── */
+    .stitle {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--t2);
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--b1);
+      margin-bottom: 10px;
+    }
+    .stitle em { color: var(--red); font-style: normal; }
+
+    /* ── KART CARDS ── */
+    .kart-list { display: flex; flex-direction: column; gap: 7px; }
+    .kart-card {
+      background: var(--card);
+      border: 1px solid var(--b1);
+      border-radius: 5px;
+      padding: 11px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .3s;
+    }
+    .kart-card.top { border-color: var(--green); box-shadow: 0 0 16px rgba(0,255,136,.07); }
+    .kart-rank { font-family:var(--mono); font-size:22px; color:var(--t3); width:26px; text-align:center; flex-shrink:0; }
+    .kart-card.top .kart-rank { color: var(--green); }
+    .kart-num {
+      background: var(--b1); border-radius: 3px; padding: 5px 9px;
+      font-family: var(--mono); font-size: 20px; font-weight: bold;
+      color: var(--t1); min-width: 50px; text-align: center; flex-shrink: 0;
+    }
+    .kart-meta { flex: 1; min-width: 0; }
+    .km-label { font-size: 8px; color: var(--t2); letter-spacing: 1px; margin-bottom: 3px; }
+    .bar-wrap { background: var(--b1); border-radius: 2px; height: 4px; }
+    .bar-fill { height: 4px; border-radius: 2px; transition: width .8s ease; }
+    .km-stats { display:flex; gap:10px; margin-top:5px; font-family:var(--mono); font-size:10px; color:var(--t2); }
+    .km-stats b { color: var(--cyan); }
+    .kart-right { flex-shrink:0; display:flex; flex-direction:column; align-items:flex-end; gap:3px; }
+    .delta { font-family:var(--mono); font-size:15px; font-weight:bold; }
+    .dn { color:var(--green); } .dp { color:var(--red); } .dz { color:var(--yellow); }
+    .conf { font-size:8px; color:var(--t2); letter-spacing:.5px; }
+    .best-tag, .grab-tag {
+      position:absolute; top:0; right:0;
+      font-size:8px; font-weight:900; letter-spacing:2px;
+      padding:2px 8px; border-bottom-left-radius:4px;
+    }
+    .best-tag { background:var(--green); color:#000; }
+    .grab-tag { background:var(--red); color:#fff; animation:blink 1.5s ease-in-out infinite; }
+
+    /* ── STANDINGS TABLE ── */
+    .t-wrap { background:var(--card); border:1px solid var(--b1); border-radius:5px; overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12px; }
+    th { color:var(--t2); font-size:8px; letter-spacing:1px; padding:6px 8px; text-align:left; border-bottom:1px solid var(--b1); }
+    td { padding:7px 8px; border-bottom:1px solid var(--b1); color:var(--t1); }
+    tr:last-child td { border-bottom:none; }
+    .p1 { color:var(--yellow); font-weight:bold; }
+    .kh { color:var(--cyan); }
+    .lt { color:var(--green); }
+
+    /* ── MANUAL INPUT ── */
+    .manual-card { background:var(--card); border:1px solid var(--b1); border-radius:5px; padding:14px; }
+    .ig { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; }
+    .if { display:flex; flex-direction:column; gap:4px; }
+    .if label { font-size:8px; color:var(--t2); letter-spacing:1.5px; text-transform:uppercase; }
+    .if input, .if textarea {
+      background:var(--bg); border:1px solid var(--b2); border-radius:3px;
+      color:var(--t1); font-family:var(--mono); font-size:14px;
+      padding:8px 10px; outline:none; transition:border-color .2s;
+      -webkit-appearance:none;
+    }
+    .if input:focus, .if textarea:focus { border-color:var(--cyan); }
+    .if textarea { resize:vertical; min-height:64px; font-size:12px; }
+    .if.full { grid-column: span 2; }
+    .add-btn {
+      width:100%; padding:11px; background:rgba(0,207,255,.08);
+      border:1px solid var(--cyan); border-radius:3px; color:var(--cyan);
+      font-family:var(--ui); font-size:12px; font-weight:700;
+      letter-spacing:2px; text-transform:uppercase; cursor:pointer;
+      transition:background .2s; margin-top:8px;
+    }
+    .add-btn:hover { background:rgba(0,207,255,.16); }
+    .clear-btn {
+      width:100%; margin-top:6px; padding:8px; background:transparent;
+      border:1px solid var(--b2); border-radius:3px; color:var(--t2);
+      font-family:var(--ui); font-size:10px; letter-spacing:1px;
+      text-transform:uppercase; cursor:pointer;
+    }
+    .stint-item {
+      margin-top:6px; padding:7px 10px;
+      background:var(--bg); border-radius:3px; border:1px solid var(--b1);
+      font-family:var(--mono); font-size:11px; color:var(--t2);
+    }
+    .stint-item span { color:var(--cyan); }
+    .stint-item b { color:var(--t1); }
+
+    /* ── EMPTY / MSG ── */
+    .empty {
+      text-align:center; padding:28px 16px;
+      color:var(--t2); font-size:12px; line-height:1.9; letter-spacing:.5px;
+    }
+    .empty strong { color:var(--yellow); display:block; font-size:15px; margin-bottom:8px; }
+    .algo-note { font-size:10px; color:var(--t3); text-align:center; padding:8px; line-height:1.7; }
+
+    /* ── BOTTOM NAV (native feel) ── */
+    #bottom-nav {
+      display: none; /* handled by tabs in main */
+    }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; bottom: calc(var(--safe-bot) + 16px); left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--card); border: 1px solid var(--b2);
+      padding: 10px 18px; border-radius: 20px;
+      font-size: 12px; color: var(--t1); letter-spacing: .5px;
+      transition: transform .3s; z-index: 99; white-space: nowrap;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ── INSTALL BANNER ── */
+    #install-banner {
+      display: none;
+      background: rgba(0,207,255,.08);
+      border: 1px solid var(--cyan);
+      border-radius: 5px;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      font-size: 12px;
+      color: var(--cyan);
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    #install-banner.show { display: flex; }
+    #install-banner button {
+      flex-shrink: 0;
+      padding: 6px 14px;
+      background: var(--cyan);
+      color: #000;
+      border: none;
+      border-radius: 3px;
+      font-family: var(--ui);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="header">
+  <div>
+    <div class="logo">KART<em>IQ</em></div>
+    <div class="logo-sub">BIG KART ROZZANO · myWER LIVE</div>
+  </div>
+  <div id="badge" class="b-off">● OFFLINE</div>
+</div>
+
+<!-- SESSION BAR -->
+<div id="session-bar" style="display:none">
+  <div class="sinfo"><div class="sl">Evento</div><div class="sv" id="s-event">—</div></div>
+  <div class="sinfo"><div class="sl">Rimasto</div><div class="sv" id="s-remaining">—</div></div>
+  <div class="sinfo"><div class="sl">Best Lap</div><div class="sv" id="s-best">—</div></div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="main">
+
+  <!-- INSTALL BANNER -->
+  <div id="install-banner">
+    📲 Installa KartIQ nella home del telefono!
+    <button id="install-btn">INSTALLA</button>
+  </div>
+
+  <!-- ACTION ROW -->
+  <div id="action-row">
+    <button class="btn btn-primary" id="refresh-btn" onclick="fetchLiveData()">
+      ⟳ DATI LIVE
+    </button>
+    <button class="btn btn-secondary" onclick="loadDemo()">
+      DEMO
+    </button>
+  </div>
+
+  <!-- TABS -->
+  <div id="tabs">
+    <div class="tab active" onclick="switchTab('ranking')">⚡ Motori</div>
+    <div class="tab" onclick="switchTab('standings')">📊 Classifica</div>
+    <div class="tab" onclick="switchTab('manual')">✏️ Manuale</div>
+  </div>
+
+  <!-- TAB: RANKING -->
+  <div id="tab-ranking">
+    <div class="stitle">CLASSIFICA MOTORI — <em>Chi prendere al prossimo pit</em></div>
+    <div id="ranking-content">
+      <div class="empty">
+        <strong>Nessun dato</strong>
+        Premi "DATI LIVE" per caricare la gara in corso su Big Kart Rozzano,
+        oppure inserisci i tempi manualmente nel tab ✏️<br/><br/>
+        o carica i dati di prova con il tasto DEMO
+      </div>
+    </div>
+    <div class="algo-note" id="algo-note" style="display:none">
+      Delta = differenza media tra il tempo del kart e il baseline del pilota.<br/>
+      Negativo ✅ = motore più veloce delle aspettative del pilota.
+    </div>
+  </div>
+
+  <!-- TAB: STANDINGS -->
+  <div id="tab-standings" style="display:none">
+    <div class="stitle">CLASSIFICA <em>LIVE</em></div>
+    <div id="standings-content">
+      <div class="empty"><strong>Nessuna classifica</strong>Scarica i dati live per vedere la classifica in tempo reale.</div>
+    </div>
+  </div>
+
+  <!-- TAB: MANUAL -->
+  <div id="tab-manual" style="display:none">
+    <div class="stitle">INSERIMENTO <em>MANUALE</em></div>
+    <div class="manual-card">
+      <div class="ig">
+        <div class="if">
+          <label>N° Kart</label>
+          <input id="m-kart" type="number" placeholder="es. 7" inputmode="numeric" />
+        </div>
+        <div class="if">
+          <label>Team / Pilota</label>
+          <input id="m-team" type="text" placeholder="es. Team Rossi" />
+        </div>
+        <div class="if full">
+          <label>Tempi giro (spazio o virgola) — es: 58.4 57.9 1:02.3</label>
+          <textarea id="m-laps" placeholder="58.4 57.9 58.1 58.6 ..."></textarea>
+        </div>
+      </div>
+      <button class="add-btn" onclick="addManualStint()">+ Aggiungi stint</button>
+    </div>
+    <div id="manual-list"></div>
+    <div class="algo-note">
+      Serve almeno 1 team che ha guidato 2+ kart diversi<br/>per attivare l'analisi differenziale motore/pilota.
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let state = {
+  status: 'idle', // idle | loading | live | offline | demo
+  session: null,
+  stints: [],
+  standings: [],
+  manualStints: [],
+  lastUpdate: null,
+  autoTimer: null,
+  currentTab: 'ranking',
+};
+
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+function parseTime(t) {
+  if (!t) return null;
+  const s = String(t).replace(',', '.');
+  if (s.includes(':')) {
+    const [m, sec] = s.split(':');
+    return parseFloat(m) * 60 + parseFloat(sec);
+  }
+  return parseFloat(s);
+}
+
+function fmtTime(sec) {
+  if (!sec || isNaN(sec)) return '--:--.---';
+  const m = Math.floor(sec / 60);
+  const r = (sec % 60).toFixed(3).padStart(6, '0');
+  return `${m}:${r}`;
+}
+
+function toast(msg, ms=2500) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), ms);
+}
+
+function setBadge(status) {
+  const el = document.getElementById('badge');
+  el.className = 'b-off';
+  const map = {
+    live: ['● LIVE', 'b-live'],
+    loading: ['● SYNC…', 'b-load'],
+    demo: ['● DEMO', 'b-demo'],
+    offline: ['● OFFLINE', 'b-off'],
+    idle: ['● OFFLINE', 'b-off'],
+  };
+  const [txt, cls] = map[status] || map.idle;
+  el.textContent = txt;
+  el.className = cls;
+}
+
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+function switchTab(name) {
+  state.currentTab = name;
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    const names = ['ranking', 'standings', 'manual'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  ['ranking', 'standings', 'manual'].forEach(n => {
+    document.getElementById(`tab-${n}`).style.display = n === name ? 'block' : 'none';
+  });
+}
+
+// ─── ALGORITHM ────────────────────────────────────────────────────────────────
+function analyzeKarts(stints) {
+  const parsed = stints.map(s => ({
+    ...s,
+    laps: (s.lapTimes || []).map(parseTime).filter(t => t && t > 20 && t < 300),
+  }));
+  // Team baselines
+  const teamLaps = {};
+  parsed.forEach(s => {
+    if (!teamLaps[s.teamName]) teamLaps[s.teamName] = [];
+    teamLaps[s.teamName].push(...s.laps);
+  });
+  const baseline = {};
+  Object.entries(teamLaps).forEach(([t, laps]) => {
+    if (laps.length > 0) baseline[t] = laps.reduce((a, b) => a + b, 0) / laps.length;
+  });
+  // Per-kart aggregation
+  const karts = {};
+  parsed.forEach(s => {
+    const k = String(s.kartNumber);
+    if (!karts[k]) karts[k] = { deltas: [], allLaps: [], drivers: new Set(), stints: 0 };
+    if (!s.laps.length) return;
+    const avg = s.laps.reduce((a, b) => a + b, 0) / s.laps.length;
+    if (baseline[s.teamName]) karts[k].deltas.push(avg - baseline[s.teamName]);
+    karts[k].allLaps.push(...s.laps);
+    karts[k].drivers.add(s.teamName);
+    karts[k].stints++;
+  });
+  return Object.entries(karts)
+    .filter(([, s]) => s.allLaps.length >= 2)
+    .map(([kart, s]) => {
+      const delta = s.deltas.length ? s.deltas.reduce((a, b) => a + b, 0) / s.deltas.length : 0;
+      const best = Math.min(...s.allLaps);
+      const avg = s.allLaps.reduce((a, b) => a + b, 0) / s.allLaps.length;
+      const conf = Math.min(100, s.drivers.size * 25 + s.allLaps.length * 3 + s.stints * 5);
+      return { kartNumber: kart, delta, best, avg, conf, drivers: s.drivers.size, laps: s.allLaps.length };
+    })
+    .sort((a, b) => a.delta - b.delta);
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function render() {
+  setBadge(state.status);
+  renderSession();
+  renderRanking();
+  renderStandings();
+  renderRefreshBtn();
+}
+
+function renderSession() {
+  const bar = document.getElementById('session-bar');
+  const s = state.session;
+  if (!s) { bar.style.display = 'none'; return; }
+  bar.style.display = 'grid';
+  document.getElementById('s-event').textContent = s.event || '—';
+  document.getElementById('s-remaining').textContent = s.timeRemaining || '—';
+  document.getElementById('s-best').textContent = s.bestLap || '—';
+}
+
+function renderRefreshBtn() {
+  const btn = document.getElementById('refresh-btn');
+  const loading = state.status === 'loading';
+  btn.disabled = loading;
+  btn.innerHTML = loading ? '<span class="spin">⟳</span> SYNC…' : '⟳ DATI LIVE';
+}
+
+function renderRanking() {
+  const all = [...state.stints, ...state.manualStints];
+  const ranked = analyzeKarts(all);
+  const el = document.getElementById('ranking-content');
+  const note = document.getElementById('algo-note');
+
+  if (!ranked.length) {
+    el.innerHTML = `<div class="empty"><strong>Nessun dato</strong>
+      Premi "DATI LIVE" o usa il tab ✏️ per inserire i tempi manualmente.</div>`;
+    note.style.display = 'none';
+    return;
+  }
+
+  note.style.display = 'block';
+  const maxD = ranked[ranked.length - 1].delta;
+  const minD = ranked[0].delta;
+  const range = maxD - minD || 1;
+
+  el.innerHTML = '<div class="kart-list">' + ranked.map((k, i) => {
+    const score = 100 - ((k.delta - minD) / range) * 100;
+    const isTop = i === 0;
+    const barColor = k.delta < -0.3 ? 'var(--green)' : k.delta > 0.3 ? 'var(--red)' : 'var(--yellow)';
+    const dClass = k.delta < -0.1 ? 'dn' : k.delta > 0.1 ? 'dp' : 'dz';
+    const dSign = k.delta >= 0 ? '+' : '';
+    const tag = isTop ? '<div class="best-tag">★ MIGLIOR MOTORE</div>' : '';
+
+    return `<div class="kart-card ${isTop ? 'top' : ''}">
+      ${tag}
+      <div class="kart-rank">${i + 1}</div>
+      <div class="kart-num">#${k.kartNumber}</div>
+      <div class="kart-meta">
+        <div class="km-label">PERFORMANCE MOTORE — ${score.toFixed(0)}%</div>
+        <div class="bar-wrap"><div class="bar-fill" style="width:${score}%;background:${barColor}"></div></div>
+        <div class="km-stats">
+          <span>BEST <b>${fmtTime(k.best)}</b></span>
+          <span>GIRI <b>${k.laps}</b></span>
+          <span>DRIVER <b>${k.drivers}</b></span>
+        </div>
+      </div>
+      <div class="kart-right">
+        <div class="delta ${dClass}">${dSign}${k.delta.toFixed(3)}s</div>
+        <div class="conf">CERT. ${k.conf.toFixed(0)}%</div>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function renderStandings() {
+  const el = document.getElementById('standings-content');
+  if (!state.standings.length) {
+    el.innerHTML = `<div class="empty"><strong>Nessuna classifica</strong>Scarica i dati live.</div>`;
+    return;
+  }
+  el.innerHTML = `<div class="t-wrap"><table>
+    <thead><tr><th>POS</th><th>KART</th><th>TEAM</th><th>GIRI</th><th>BEST</th><th>GAP</th></tr></thead>
+    <tbody>` + state.standings.map(r => `
+      <tr>
+        <td class="${r.position===1?'p1':''}">${r.position}</td>
+        <td class="kh">#${r.kartNumber}</td>
+        <td style="font-size:10px;color:var(--t2)">${r.teamName}</td>
+        <td>${r.totalLaps}</td>
+        <td class="lt">${r.bestLap||'—'}</td>
+        <td style="font-size:10px;color:var(--t2)">${r.gap||'—'}</td>
+      </tr>`).join('') + `</tbody></table></div>`;
+}
+
+function renderManualList() {
+  const el = document.getElementById('manual-list');
+  if (!state.manualStints.length) { el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <div style="margin-top:12px;font-size:9px;color:var(--t2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">
+      STINT INSERITI (${state.manualStints.length})
+    </div>` +
+    state.manualStints.map((s, i) => `
+      <div class="stint-item">
+        <span>#${s.kartNumber}</span> &nbsp;
+        <b>${s.teamName}</b> &nbsp;
+        ${s.lapTimes.length} giri · best ${fmtTime(Math.min(...s.lapTimes.map(parseTime).filter(t=>t)))}
+        <span onclick="removeManual(${i})" style="float:right;cursor:pointer;color:var(--red)">✕</span>
+      </div>`).join('') +
+    `<button class="clear-btn" onclick="clearManual()">Cancella tutti gli stint manuali</button>`;
+}
+
+// ─── MANUAL ───────────────────────────────────────────────────────────────────
+function addManualStint() {
+  const kart = document.getElementById('m-kart').value.trim();
+  const team = document.getElementById('m-team').value.trim();
+  const raw  = document.getElementById('m-laps').value.trim();
+  if (!kart || !team || !raw) { toast('⚠️ Compila tutti i campi'); return; }
+  const laps = raw.split(/[\s,;]+/).filter(Boolean);
+  const times = laps.map(parseTime).filter(t => t && t > 20);
+  if (!times.length) { toast('⚠️ Nessun tempo valido'); return; }
+  state.manualStints.push({ kartNumber: kart, teamName: team, lapTimes: times });
+  document.getElementById('m-laps').value = '';
+  renderManualList();
+  renderRanking();
+  toast(`✅ Stint kart #${kart} aggiunto`);
+}
+
+function removeManual(i) {
+  state.manualStints.splice(i, 1);
+  renderManualList(); renderRanking();
+}
+
+function clearManual() {
+  state.manualStints = [];
+  renderManualList(); renderRanking();
+}
+
+// ─── DEMO ─────────────────────────────────────────────────────────────────────
+function loadDemo() {
+  const base = 58.5;
+  const off  = { 3:-1.2, 7:-0.8, 5:-0.3, 11:0.1, 2:0.4, 9:0.9, 14:1.4 };
+  const db   = { A:0, B:0.3, C:-0.2, D:0.6 };
+  const laps = (k, d, n) => Array.from({length:n}, () =>
+    base + (off[k]??0) + (db[d]??0) + (Math.random()-.5)*.6);
+
+  state.stints = [
+    {kartNumber:'3', teamName:'Team A', lapTimes:laps(3,'A',12)},
+    {kartNumber:'7', teamName:'Team B', lapTimes:laps(7,'B',10)},
+    {kartNumber:'5', teamName:'Team A', lapTimes:laps(5,'A',8)},
+    {kartNumber:'3', teamName:'Team C', lapTimes:laps(3,'C',9)},
+    {kartNumber:'11',teamName:'Team D', lapTimes:laps(11,'D',11)},
+    {kartNumber:'7', teamName:'Team C', lapTimes:laps(7,'C',7)},
+    {kartNumber:'2', teamName:'Team B', lapTimes:laps(2,'B',9)},
+    {kartNumber:'9', teamName:'Team D', lapTimes:laps(9,'D',6)},
+    {kartNumber:'14',teamName:'Team A', lapTimes:laps(14,'A',8)},
+    {kartNumber:'5', teamName:'Team B', lapTimes:laps(5,'B',5)},
+  ];
+  state.session = { event:'ENDURANCE 3H — DEMO', timeRemaining:'1:24:35', bestLap: fmtTime(base-1.3), bestLapBy:'Kart 3' };
+  state.standings = [
+    {position:1,teamName:'Team C',kartNumber:'3',totalLaps:96,bestLap:fmtTime(57.1),gap:'—'},
+    {position:2,teamName:'Team A',kartNumber:'14',totalLaps:94,bestLap:fmtTime(57.4),gap:'+2 giri'},
+    {position:3,teamName:'Team B',kartNumber:'5',totalLaps:92,bestLap:fmtTime(57.8),gap:'+4 giri'},
+    {position:4,teamName:'Team D',kartNumber:'9',totalLaps:89,bestLap:fmtTime(58.5),gap:'+7 giri'},
+  ];
+  state.status = 'demo';
+  render();
+  toast('📊 Dati demo caricati');
+}
+
+// ─── LIVE FETCH via Claude API ────────────────────────────────────────────────
+async function fetchLiveData() {
+  if (state.status === 'loading') return;
+  clearInterval(state.autoTimer);
+  state.status = 'loading';
+  render();
+
+  const prompt = `Search the web and fetch live race timing data from the myWER / Time2Race system for "Big Kart" circuit at Rozzano (Italy).
+
+Try these URLs:
+- https://time2race.mywer.it/circuito-dett.php?id_circuito=20
+- https://time2race.mywer.it/ (look for Big Kart live session)
+- https://www.gokart.it (Big Kart Rozzano official site)
+
+Look for any active/live race session. Extract all timing data:
+- Session info: event name, time remaining, race elapsed, best lap, leader
+- For EACH entry: kart number, driver/team name, total laps, last lap time, best lap time, gap to leader
+- Pit stop history or stint changes if visible (which team drove which kart)
+- Individual lap times per kart if visible
+
+Return ONLY valid JSON (no markdown, no explanation) with this structure:
+{
+  "session": {
+    "event": "string",
+    "timeRemaining": "H:MM:SS",
+    "raceTime": "H:MM:SS",
+    "bestLap": "M:SS.mmm",
+    "bestLapBy": "string"
+  },
+  "stints": [
+    { "kartNumber": "5", "teamName": "Team Name", "lapTimes": [58.1, 57.9] }
+  ],
+  "currentStandings": [
+    { "position": 1, "teamName": "string", "kartNumber": "5", "totalLaps": 45, "lastLap": "M:SS.mmm", "bestLap": "M:SS.mmm", "gap": "string" }
+  ]
+}
+
+If no live race is active, return: {"session":null,"stints":[],"currentStandings":[]}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+
+    const data = await res.json();
+    const text = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    const s = text.indexOf('{'), e = text.lastIndexOf('}');
+    if (s === -1 || e === -1) throw new Error('No JSON in response');
+    const parsed = JSON.parse(text.slice(s, e + 1));
+
+    if (parsed.session) {
+      state.session   = parsed.session;
+      state.stints    = parsed.stints || [];
+      state.standings = parsed.currentStandings || [];
+      state.status    = 'live';
+      state.lastUpdate = new Date();
+      toast('✅ Dati live aggiornati');
+      // Auto-refresh ogni 30s
+      state.autoTimer = setInterval(fetchLiveData, 30000);
+    } else {
+      state.status = 'offline';
+      toast('ℹ️ Nessuna gara live in corso su Big Kart');
+    }
+  } catch (err) {
+    state.status = 'offline';
+    toast('⚠️ Errore: ' + err.message.slice(0, 40));
+  }
+
+  render();
+}
+
+// ─── PWA INSTALL ──────────────────────────────────────────────────────────────
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const banner = document.getElementById('install-banner');
+  banner.classList.add('show');
+});
+document.getElementById('install-btn').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('install-banner').classList.remove('show');
+  if (outcome === 'accepted') toast('🎉 KartIQ installata!');
+});
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-banner').classList.remove('show');
+  toast('🏁 KartIQ installata nella home!');
+});
+
+// ─── SERVICE WORKER ───────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
