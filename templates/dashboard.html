@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APEX VELOCITY - RADAR LIVE</title>
+    
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#cafd00",       /* Verde/Giallo Neon */
+              "secondary": "#ff51fa",     /* Fucsia Neon */
+              "tertiary": "#00ffff",      /* Ciano Neon */
+              "background": "#0e0e0e",    /* Sfondo Scuro Base */
+              "surface": "#131313",       /* Sfondo Pannelli */
+              "surface-light": "#262626", /* Sfondo Hover */
+              "error": "#ff7351",         /* Rosso Pit/Errori */
+            },
+            fontFamily: {
+              "sans": ["Space Grotesk", "sans-serif"],
+            }
+          }
+        }
+      }
+    </script>
+
+    <style>
+        body { background-color: #0e0e0e; color: #ffffff; }
+        
+        /* Custom Scrollbar stile Racing */
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #131313; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cafd00; border-radius: 3px; }
+        
+        table { table-layout: fixed; }
+    </style>
+</head>
+<body class="antialiased h-screen flex flex-col font-sans uppercase tracking-widest custom-scroll overflow-x-hidden">
+
+    <header class="w-full h-16 bg-surface border-b border-white/5 flex justify-between items-center px-6 z-50 shrink-0">
+        <div class="flex items-center gap-4">
+            <div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+            <span class="text-xl font-black text-primary tracking-tighter">RADAR KART LIVE</span>
+        </div>
+        <a href="/logout" class="text-xs font-bold text-white/40 hover:text-white transition-colors">DISCONNETTI</a>
+    </header>
+
+    <main class="flex-1 overflow-y-auto custom-scroll p-4 md:p-8">
+        
+        <div class="mb-8 flex flex-col lg:flex-row gap-4 justify-between items-end bg-surface p-6 rounded-sm border border-white/5 shadow-2xl">
+            <div class="flex flex-col md:flex-row gap-6 w-full lg:w-auto">
+                <div class="flex flex-col">
+                    <label class="text-[10px] font-black text-white/40 mb-2">CIRCUITO</label>
+                    <select id="menu-circuito" onchange="caricaGare()" class="bg-[#0e0e0e] border border-white/10 text-white text-sm focus:ring-primary focus:border-primary p-3 w-64 transition-all outline-none appearance-none cursor-pointer hover:border-white/30">
+                        <option value="">-- Seleziona --</option>
+                    </select>
+                </div>
+                
+                <div class="flex flex-col">
+                    <label class="text-[10px] font-black text-white/40 mb-2">SESSIONE LIVE</label>
+                    <select id="menu-gara" class="bg-[#0e0e0e] border border-white/10 text-white text-sm focus:ring-primary focus:border-primary p-3 w-64 transition-all outline-none appearance-none cursor-pointer hover:border-white/30">
+                        <option value="">-- Seleziona --</option>
+                    </select>
+                </div>
+            </div>
+
+            <button onclick="salvaImpostazioni()" class="bg-primary text-[#0e0e0e] px-8 py-3 text-xs font-black tracking-[0.2em] hover:bg-white transition-all active:scale-95 w-full lg:w-auto mt-4 lg:mt-0">
+                INIT TELEMETRY
+            </button>
+        </div>
+
+        <div class="bg-surface rounded-sm border border-white/5 overflow-hidden shadow-2xl">
+            <div class="overflow-x-auto custom-scroll">
+                <table class="w-full text-left border-collapse min-w-[900px]">
+                    <thead>
+                        <tr class="bg-[#0e0e0e] text-[10px] font-black text-white/40 border-b border-white/10">
+                            <th class="py-4 pl-6 w-16">POS</th>
+                            <th class="py-4 w-20 text-center">KART</th>
+                            <th class="py-4 w-1/4">TEAM / DRIVER</th>
+                            <th class="py-4 w-20 text-center">LAPS</th>
+                            <th class="py-4 w-28 text-center">LAST LAP</th>
+                            <th class="py-4 w-28 text-center">BEST LAP</th>
+                            <th class="py-4 w-20 text-center">IN LAP</th>
+                            <th class="py-4 w-20 text-center text-error">PIT</th>
+                            <th class="py-4 w-28 text-center">GAP</th>
+                            <th class="py-4 pr-6 w-32 text-right">TOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpo-tabella" class="divide-y divide-white/5 text-sm">
+                        <tr>
+                            <td colspan="10" class="py-8 text-center text-white/20 font-bold text-xs tracking-widest">
+                                IN ATTESA DI CONNESSIONE AL SERVER TIME2RACE...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+    </main>
+
+    <footer class="bg-surface border-t border-primary/20 py-4 px-6 flex justify-between items-center text-[10px] font-black text-white/30 shrink-0">
+        <span>© 2024 APEX VELOCITY // SYSTEM ONLINE</span>
+        <span class="text-primary flex items-center gap-2">
+            <span class="w-1.5 h-1.5 bg-primary rounded-full"></span>
+            DATA STREAM SECURE
+        </span>
+    </footer>
+
+    <script>
+        window.onload = function() {
+            fetch('/api/circuiti')
+                .then(r => r.json())
+                .then(piste => {
+                    let menu = document.getElementById('menu-circuito');
+                    for (const id in piste) menu.innerHTML += `<option value="${id}">${piste[id]}</option>`;
+                    
+                    fetch('/api/sessione')
+                        .then(r => r.json())
+                        .then(sess => {
+                            if(sess.id_circuito && sess.id_gara) {
+                                document.getElementById('menu-circuito').value = sess.id_circuito;
+                                caricaGare(() => {
+                                    document.getElementById('menu-gara').value = sess.id_gara;
+                                    aggiornaDati();
+                                });
+                            }
+                        });
+                });
+        };
+
+        function caricaGare(callback) {
+            let idCircuito = document.getElementById('menu-circuito').value;
+            let menuGara = document.getElementById('menu-gara');
+            if (!idCircuito) return;
+            
+            fetch('/api/gare_circuito/' + idCircuito)
+                .then(res => res.json())
+                .then(gare => {
+                    menuGara.innerHTML = '<option value="">-- Seleziona Gara --</option>';
+                    gare.forEach(g => menuGara.innerHTML += `<option value="${g.id_gara}">${g.nome}</option>`);
+                    if (callback) callback();
+                });
+        }
+
+        function salvaImpostazioni() {
+            let idCircuito = document.getElementById('menu-circuito').value;
+            let idGara = document.getElementById('menu-gara').value;
+            if (!idCircuito || !idGara) { alert("SISTEMA: Seleziona Circuito e Gara"); return; }
+
+            document.getElementById('corpo-tabella').innerHTML = `<tr><td colspan="10" class="py-8 text-center text-primary font-bold text-xs tracking-widest animate-pulse">SINCRONIZZAZIONE DATI IN CORSO...</td></tr>`;
+
+            fetch('/api/imposta_gara', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_circuito: idCircuito, id_gara: idGara })
+            }).then(() => aggiornaDati());
+        }
+
+        function aggiornaDati() {
+            fetch('/api/live_data')
+                .then(response => response.json())
+                .then(dati => {
+                    let corpo = document.getElementById('corpo-tabella');
+                    if (dati.messaggio || dati.errore || dati.length === 0) return;
+
+                    let html = "";
+                    dati.forEach((k, i) => {
+                        // Colore posizione: Primo = Verde, Secondo = Fucsia, Terzo = Ciano, Altri = Grigio scuro
+                        let posBg = i === 0 ? 'bg-primary text-[#0e0e0e]' : 
+                                    i === 1 ? 'bg-secondary text-[#0e0e0e]' : 
+                                    i === 2 ? 'bg-tertiary text-[#0e0e0e]' : 'bg-surface-light text-white/80';
+                        
+                        // Barra laterale colorata (sinistra)
+                        let accentBar = i === 0 ? 'bg-primary' : 
+                                        i === 1 ? 'bg-secondary opacity-80' : 
+                                        i === 2 ? 'bg-tertiary opacity-80' : 'bg-white/10 group-hover:bg-primary transition-colors';
+
+                        let pitStile = k.pit > 0 ? 'text-error font-black' : 'text-white/20';
+
+                        html += `
+                        <tr class="group hover:bg-white/5 transition-all duration-200">
+                            <td class="py-3 pl-6 relative">
+                                <div class="absolute left-0 top-0 bottom-0 w-1 ${accentBar}"></div>
+                                <span class="${posBg} font-black px-2 py-1 min-w-[32px] text-center inline-block text-xs">${i + 1}</span>
+                            </td>
+                            <td class="text-center font-bold text-white/60 text-xs">
+                                <span class="bg-[#0e0e0e] border border-white/10 px-2 py-1">${k.kart}</span>
+                            </td>
+                            <td class="text-left font-bold tracking-tight">
+                                <a href="/kart_detail/${k.id_gara}/${k.kart}" class="text-white group-hover:text-primary transition-colors block py-2">
+                                    ${k.team}
+                                </a>
+                            </td>
+                            <td class="text-center text-white/40 font-medium">${k.laps}</td>
+                            <td class="text-center text-primary font-medium tracking-wider">${k.lastTime}</td>
+                            <td class="text-center text-secondary font-bold tracking-wider">${k.bestTime}</td>
+                            <td class="text-center text-white/40 font-mono text-xs">${k.inLap}</td>
+                            <td class="text-center ${pitStile}">${k.pit}</td>
+                            <td class="text-center text-tertiary font-mono text-[10px]">${k.gap}</td>
+                            <td class="text-right text-white/30 font-mono text-[10px] pr-6">${k.total}</td>
+                        </tr>`;
+                    });
+                    corpo.innerHTML = html;
+                });
+        }
+
+        setInterval(aggiornaDati, 5000);
+    </script>
+</body>
+</html>
